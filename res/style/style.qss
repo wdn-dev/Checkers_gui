@@ -1,0 +1,88 @@
+#frame_tools{
+    background-color:#36414c;
+}
+    
+#centralwidget{
+	background:#333333;
+}
+
+/*
+#ExportImageDialog {
+	background:#B2B6B9;
+}
+*/
+    
+QPushButton{
+     background-color:#e6e6e6;
+}
+	
+.QPushButton{
+    width: 75px;
+    height: 15px;
+    border-style:none;
+    border:1px solid #B2B6B9;
+    color:#ffffff;
+    padding:5px;
+    border-radius:0px;
+    background:qlineargradient(spread:pad,x1:0,y1:0,x2:0,y2:1,stop:0 #333333,stop:1 #a9a9a9);
+}
+
+.QPushButton:hover{
+    background:qlineargradient(spread:pad,x1:0,y1:0,x2:0,y2:1,stop:0 #35aaf7,stop:1 #35aaf7);
+}
+
+.QPushButton:pressed:pressed{
+    background:qlineargradient(spread:pad,x1:0,y1:0,x2:0,y2:1,stop:0 #35aaf7,stop:1 #35aaf7);
+}
+
+QMenu{
+    color:#ffffff; 
+    background:#4d4d4d;
+}
+
+QMenu::item:selected{
+	color: #ffffff; 
+    background: #35aaf7;
+}
+
+QToolButton {
+	width: 25px;
+    height: 25px;
+	padding: 0 6 0 6;
+}
+
+QMenu:hover{
+    background: #35aaf7;
+}
+    
+QScrollArea{
+    color:#d8d8d8; 
+    background:#666666;
+    border:5px solid #4d4d4d;
+    border-radius:10px;
+    margin-top:5px;
+}
+    
+QWidget#scrollAreaWidgetContents{
+    background-color:#333333;
+}
+
+QTextBrowser#textBrowser_result_info{
+    color:#e6e6e6; 
+    background:#666666;
+    border:5px solid #4d4d4d;
+    border-radius:10px
+}
+    
+#stackedWidget_2{
+    border:5px solid #4d4d4d;
+	border-radius:10px;
+}
+ 
+#widget_view_container,#widget_3D{
+    border:1px solid #4d4d4d;
+}
+
+#textEdit{
+    background-color:#f0f0f0;
+}
