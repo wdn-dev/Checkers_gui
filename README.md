@@ -10,6 +10,10 @@
 
 主窗口类中，实例化`ChessController`类时，传入不同的参数，可切换国跳100和国跳64
 
+```shell
+python main_window.py
+```
+
 ## 国跳100
 
 ```python

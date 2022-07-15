@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #  @file        - chess_state.py
-#  @author      - dongnian.wang
+#  @author      - dongnian.wang(dongnian.wang@outlook.com)
 #  @brief       - 棋子状态类
 #  @version     - 0.0
 #  @date        - 2022.07.06

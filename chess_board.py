@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #  @file        - chess_board.py
-#  @author      - dongnian.wang
+#  @author      - dongnian.wang(dongnian.wang@outlook.com)
 #  @brief       - 国际跳棋棋盘类
 #  @version     - 0.0
 #  @date        - 2022.07.06
