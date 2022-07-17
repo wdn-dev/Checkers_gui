@@ -9,7 +9,7 @@
 from copy import deepcopy
 import sys
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushButton, QPlainTextEdit, QTextEdit, QMainWindow
+from PyQt5.QtWidgets import QApplication, QWidget,QFrame, QLabel, QMessageBox, QPushButton, QPlainTextEdit, QTextEdit, QMainWindow
 from PyQt5.QtWidgets import QSizePolicy
 from PyQt5.QtCore import Qt, QSize, QDateTime, QTimer, pyqtSignal, QRect, QPoint
 from PyQt5.QtGui import QPixmap, QIcon, QFont, QPalette, QColor, QImage, QMouseEvent, QResizeEvent, QPainter, QPen, QBrush
@@ -24,8 +24,8 @@ class ChessBoard(QWidget):
     """ 信号
     """
     mouse_clicked_signal = pyqtSignal(int, int)
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *__args):
+        super().__init__(*__args)
 
         # init
         pal = self.palette()
@@ -80,7 +80,7 @@ class ChessBoard(QWidget):
             self.chess_list.clear()
             self.repaint()
         else :
-            self.clear()
+            self.clear_slot()
 
     def set_chess_size_slot(self, size):
         """ 设置棋盘大小
@@ -123,13 +123,14 @@ class ChessBoard(QWidget):
         """ 左击鼠标事件
         """
         if event.button() == Qt.LeftButton: 
-            # print("base_point: ", self.base_point)
+            # print("base_point: {}, {}".format(self.base_point.x(), self.base_point.y()))
             # print("event.pos:", event.pos())
             # print("self.chess_size:", self.chess_size)
             # print("aaaaaaaa: ", (event.pos().y() - self.base_point.y()) * (self.chess_size) / self.side)
             i = int((event.pos().x() - self.base_point.x()) * (self.chess_size) / self.side)
             j = int(self.chess_size - int((event.pos().y() - self.base_point.y()) * (self.chess_size) / self.side) - 1)
             print("i: {}, j: {}".format(i, j))
+            print("new: i:{}, j:{}".format(self.chess_size - j-1, i))
             # self.mouse_clicked_signal.emit(int(1),int(1))
             if(self.rival_chess_color == ChessType.BLACK):
                 self.mouse_clicked_signal.emit(int(i), int(j))
@@ -235,9 +236,9 @@ class ChessBoard(QWidget):
         if event.oldSize() != event.size():
             self.update()
             self.side = min(self.width(), self.height())
-            # print("w:{},h:{}, side:{}".format(self.width(), self.height(), self.side))
+            print("w:{},h:{}, side:{}".format(self.width(), self.height(), self.side))
             self.base_point = QPoint((self.width() - self.side) / 2, (self.height() - self.side) / 2)
-            # print("222base_point: ", self.base_point)
+            # print("base_point: {}, {}".format(self.base_point.x, self.base_point.y))
             self.hour_glass = QImage("res/icons/hourglass.png")
         else:
             event.ignore()
@@ -249,8 +250,6 @@ class ChessBoard(QWidget):
                      self.zoom * (self.chess_size - 1.0) - self.zoom * j,
                      self.zoom,
                      self.zoom)
-
-
 
 
 
