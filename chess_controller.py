@@ -271,6 +271,20 @@ class ChessController(QObject):
             win_chess_color = self.who_win(self.curr_state)[0]
             self.game_end_signal.emit(win_chess_color)
 
+    def row_col_to_pix(self, row:int, col:int):
+        """ 坐标转换函数，行列转换为i，j
+        """
+        i = col
+        j = self.chess_size - row-1
+        return i, j
+
+    def pix_to_row_col(self, i: int, j: int):
+        """ 坐标转换函数，i, j 转换为行列
+        """
+        row = self.chess_size - j-1
+        col = i
+        return row, col
+
     def change_state(self, state:ChessState):
         """ 棋子移动
         """
