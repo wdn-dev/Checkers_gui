@@ -1,0 +1,1 @@
+D:\Software\Miniconda3\envs\checker\Scripts\pyuic5.exe .\main_window.ui -o main_windows_ui.py

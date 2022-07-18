@@ -7,12 +7,13 @@
 #  @copyright   - Copyright (c) 2021 
 
 import copy
+from enum import Enum
 
-class ChessType:
+class ChessType(enumerate):
     """ 棋子类型
     """
     GOON = -1,                  # 未赢，继续下棋
-    EMPTY = 0,                  # 没放棋子的格子, i%2 != j%2
+    EMPTY = 0,                  # 没放棋子的格子, i%2 == j%2
     WHITE = 1,                  # 白棋
     BLACK = 2,                  # 黑棋
     WHITEKING = 3,              # 白王棋
@@ -108,7 +109,7 @@ class ChessState(object):
     def at(self, i:int, j:int):
         """ 返回点的属性
         """
-        if i % 2 != j % 2:
+        if i % 2 == j % 2:
             return ChessType.EMPTY
         return self.chess_state[i][j]
 

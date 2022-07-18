@@ -9,7 +9,7 @@
 from copy import deepcopy
 import sys
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushButton, QPlainTextEdit, QTextEdit, QMainWindow
+from PyQt5.QtWidgets import QApplication, QWidget,QFrame, QLabel, QMessageBox, QPushButton, QPlainTextEdit, QTextEdit, QMainWindow
 from PyQt5.QtWidgets import QSizePolicy
 from PyQt5.QtCore import Qt, QSize, QDateTime, QTimer, pyqtSignal, QRect, QPoint
 from PyQt5.QtGui import QPixmap, QIcon, QFont, QPalette, QColor, QImage, QMouseEvent, QResizeEvent, QPainter, QPen, QBrush
@@ -24,8 +24,8 @@ class ChessBoard(QWidget):
     """ 信号
     """
     mouse_clicked_signal = pyqtSignal(int, int)
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *__args):
+        super().__init__(*__args)
 
         # init
         pal = self.palette()
@@ -80,7 +80,7 @@ class ChessBoard(QWidget):
             self.chess_list.clear()
             self.repaint()
         else :
-            self.clear()
+            self.clear_slot()
 
     def set_chess_size_slot(self, size):
         """ 设置棋盘大小
@@ -123,18 +123,25 @@ class ChessBoard(QWidget):
         """ 左击鼠标事件
         """
         if event.button() == Qt.LeftButton: 
-            # print("base_point: ", self.base_point)
+            # print("base_point: {}, {}".format(self.base_point.x(), self.base_point.y()))
             # print("event.pos:", event.pos())
             # print("self.chess_size:", self.chess_size)
             # print("aaaaaaaa: ", (event.pos().y() - self.base_point.y()) * (self.chess_size) / self.side)
             i = int((event.pos().x() - self.base_point.x()) * (self.chess_size) / self.side)
             j = int(self.chess_size - int((event.pos().y() - self.base_point.y()) * (self.chess_size) / self.side) - 1)
-            print("i: {}, j: {}".format(i, j))
-            # self.mouse_clicked_signal.emit(int(1),int(1))
-            if(self.rival_chess_color == ChessType.BLACK):
-                self.mouse_clicked_signal.emit(int(i), int(j))
-            else :
-                self.mouse_clicked_signal.emit(self.chess_size - 1 - int(i), self.chess_size - 1 - int(j))
+
+            row = int( int((event.pos().y() + self.base_point.y()) * (self.chess_size) / self.side))
+            col = int((event.pos().x() - self.base_point.x()) * (self.chess_size) / self.side)
+
+            # print("pos: x: {}, y: {}".format(event.pos().x(), event.pos().y()))
+            
+            # print("i: {}, j: {}".format(i, j))
+            print("coord: row:{}, col:{}".format(row, col))
+            self.mouse_clicked_signal.emit(int(row),int(col))
+            # if(self.rival_chess_color == ChessType.BLACK):
+            #     self.mouse_clicked_signal.emit(int(i), int(j))
+            # else :
+            #     self.mouse_clicked_signal.emit(self.chess_size - 1 - int(i), self.chess_size - 1 - int(j))
 
     def paintEvent(self, event:QMouseEvent) -> None:
         """ 绘制棋盘
@@ -154,73 +161,99 @@ class ChessBoard(QWidget):
         light = QColor(0xed,0xfc,0xdf,200)
         deep = QColor(0x5a,0x61,0x54,200)
 
+        # rect = self._pixe_rect(9, 0)
+        # painter.fillRect(rect, deep)
+
         # 绘制棋盘
-        # print(self.chess_size)
         for i in range(0, self.chess_size):
             for j in range(0, self.chess_size):
                 rect = self._pixe_rect(i, j)
-                if (i+j%2)%2 == 0:
+                if (i+j%2)%2 == 1:
                     painter.fillRect(rect, deep)
                 else:
                     painter.fillRect(rect, light)
         ix = 0
         jx = 0
-        if len(self.chess_list) != 0:
-            tmp_type = None
-            for i in range(0, len(self.chess_list)):
-                if self.rival_chess_color == ChessType.WHITE:
-                    ix = self.chess_size - 1 - self.chess_list[i].x
-                    jx = self.chess_size - 1 - self.chess_list[i].y
-                else:
-                    ix = self.chess_list[i].x
-                    jx = self.chess_list[i].y
-                rect = self._pixe_rect(ix, jx)
-                tmp_type = self.chess_list[i].type
-                if tmp_type == ChessType.MOVEDFROM:
-                    painter.fillRect(rect, start_color)
-                elif tmp_type == ChessType.MOVEDTO or tmp_type == ChessType.TOKING:
-                    painter.fillRect(rect, end_color)
-                elif tmp_type == ChessType.MOVEDTHROUGH:
-                    painter.fillRect(rect, normal_color)
-                elif tmp_type == ChessType.DELETED:
-                    painter.fillRect(rect, captured_color)
+        # if len(self.chess_list) != 0:
+        #     tmp_type = None
+        #     for i in range(0, len(self.chess_list)):
+        #         if self.rival_chess_color == ChessType.WHITE:
+        #             ix = self.chess_size - 1 - self.chess_list[i].x
+        #             jx = self.chess_size - 1 - self.chess_list[i].y
+        #         else:
+        #             ix = self.chess_list[i].x
+        #             jx = self.chess_list[i].y
+        #         rect = self._pixe_rect(ix, jx)
+        #         tmp_type = self.chess_list[i].type
+        #         if tmp_type == ChessType.MOVEDFROM:
+        #             painter.fillRect(rect, start_color)
+        #         elif tmp_type == ChessType.MOVEDTO or tmp_type == ChessType.TOKING:
+        #             painter.fillRect(rect, end_color)
+        #         elif tmp_type == ChessType.MOVEDTHROUGH:
+        #             painter.fillRect(rect, normal_color)
+        #         elif tmp_type == ChessType.DELETED:
+        #             painter.fillRect(rect, captured_color)
 
         s = self.zoom * 0.4
         sd = self.zoom * 0.3
         # 如果棋局状态发生了改变
         if self.curr_state is not None:
             painter.setPen(QPen(black, self.zoom * 0.025))
-            # 画白棋, 白色则从最后一行开始画
+            # 画白棋
             painter.setBrush(QBrush(white))
-            for i in range(0, self.chess_size):
-                for j in range(0, self.chess_size):
-                    if self.rival_chess_color == ChessType.WHITE:
-                        ix = self.chess_size - 1
-                        jx = j + 1
-                    else:
-                        ix = i + 1
-                        jx = self.chess_size - j
-                    if self.curr_state.at(i, j) == ChessType.WHITE:
-                        painter.drawEllipse(QPoint(self.zoom*(ix-0.5), self.zoom*(jx-0.5)), s, s)
-                    if self.curr_state.at(i, j) == ChessType.WHITEKING:
-                        painter.drawEllipse(QPoint(self.zoom*(ix-0.5), self.zoom*(jx-0.5)), s, s)
-                        painter.drawEllipse(QPoint(self.zoom*(ix-0.5), self.zoom*(jx-0.5)), sd, sd)
-
+            for row in range(0, self.chess_size):
+                for col in range(0, self.chess_size):
+                    # 普通白色棋子
+                    if self.curr_state.at(row, col) == ChessType.WHITE:
+                        painter.drawEllipse(QPoint(self.zoom*(col+0.5), self.zoom*(row+0.5)), s, s)
+                    # 白色王琪
+                    if self.curr_state.at(row, col) == ChessType.WHITEKING:
+                        painter.drawEllipse(QPoint(self.zoom*(col+0.5), self.zoom*(row+0.5)), s, s)
+                        painter.drawEllipse(QPoint(self.zoom*(col+0.5), self.zoom*(row+0.5)), sd, sd)
+            
             # 画黑棋
             painter.setBrush(QBrush(black))
-            for i in range(0, self.chess_size):
-                for j in range(0, self.chess_size):
-                    if self.rival_chess_color == ChessType.WHITE:
-                        ix = self.chess_size - 1
-                        jx = j + 1
-                    else:
-                        ix = i + 1
-                        jx = self.chess_size - j
-                    if self.curr_state.at(i, j) == ChessType.BLACK:
-                        painter.drawEllipse(QPoint(self.zoom*(ix-0.5), self.zoom*(jx-0.5)), s, s)
-                    if self.curr_state.at(i, j) == ChessType.BLACKKING:
-                        painter.drawEllipse(QPoint(self.zoom*(ix-0.5), self.zoom*(jx-0.5)), s, s)
-                        painter.drawEllipse(QPoint(self.zoom*(ix-0.5), self.zoom*(jx-0.5)), sd, sd)
+            for row in range(0, self.chess_size):
+                for col in range(0, self.chess_size):
+                    if self.curr_state.at(row, col) == ChessType.BLACK:
+                        painter.drawEllipse(QPoint(self.zoom*(col+0.5), self.zoom*(row+0.5)), s, s)
+                    # 黑色王琪
+                    if self.curr_state.at(row, col) == ChessType.BLACKKING:
+                        painter.drawEllipse(QPoint(self.zoom*(col+0.5), self.zoom*(row+0.5)), s, s)
+                        painter.drawEllipse(QPoint(self.zoom*(col+0.5), self.zoom*(row+0.5)), sd, sd)
+
+
+            # 画白棋, 白色则从最后一行开始画
+            # painter.setBrush(QBrush(white))
+            # for i in range(0, self.chess_size):
+            #     for j in range(0, self.chess_size):
+            #         if self.rival_chess_color == ChessType.WHITE:
+            #             ix = self.chess_size - 1
+            #             jx = j + 1
+            #         else:
+            #             ix = i + 1
+            #             jx = self.chess_size - j
+            #         if self.curr_state.at(i, j) == ChessType.WHITE:
+            #             painter.drawEllipse(QPoint(self.zoom*(ix-0.5), self.zoom*(jx-0.5)), s, s)
+            #         if self.curr_state.at(i, j) == ChessType.WHITEKING:
+            #             painter.drawEllipse(QPoint(self.zoom*(ix-0.5), self.zoom*(jx-0.5)), s, s)
+            #             painter.drawEllipse(QPoint(self.zoom*(ix-0.5), self.zoom*(jx-0.5)), sd, sd)
+
+            # # 画黑棋
+            # painter.setBrush(QBrush(black))
+            # for i in range(0, self.chess_size):
+            #     for j in range(0, self.chess_size):
+            #         if self.rival_chess_color == ChessType.WHITE:
+            #             ix = self.chess_size - 1
+            #             jx = j + 1
+            #         else:
+            #             ix = i + 1
+            #             jx = self.chess_size - j
+            #         if self.curr_state.at(i, j) == ChessType.BLACK:
+            #             painter.drawEllipse(QPoint(self.zoom*(ix-0.5), self.zoom*(jx-0.5)), s, s)
+            #         if self.curr_state.at(i, j) == ChessType.BLACKKING:
+            #             painter.drawEllipse(QPoint(self.zoom*(ix-0.5), self.zoom*(jx-0.5)), s, s)
+            #             painter.drawEllipse(QPoint(self.zoom*(ix-0.5), self.zoom*(jx-0.5)), sd, sd)
 
         if self.thinking and self.show_hour_glass:
             painter.setWindow(painter.viewport())
@@ -235,9 +268,9 @@ class ChessBoard(QWidget):
         if event.oldSize() != event.size():
             self.update()
             self.side = min(self.width(), self.height())
-            # print("w:{},h:{}, side:{}".format(self.width(), self.height(), self.side))
+            print("w:{},h:{}, side:{}".format(self.width(), self.height(), self.side))
             self.base_point = QPoint((self.width() - self.side) / 2, (self.height() - self.side) / 2)
-            # print("222base_point: ", self.base_point)
+            # print("base_point: {}, {}".format(self.base_point.x, self.base_point.y))
             self.hour_glass = QImage("res/icons/hourglass.png")
         else:
             event.ignore()
@@ -245,12 +278,11 @@ class ChessBoard(QWidget):
     def _pixe_rect(self, i:int, j:int):
         """ 返回一个矩形
         """
-        return QRect(self.zoom * (i - 0.5) + self.zoom * 0.5, 
-                     self.zoom * (self.chess_size - 1.0) - self.zoom * j,
+        return QRect(self.zoom * (j - 0.5) + self.zoom * 0.5, 
+                    #  self.zoom * (self.chess_size - 1.0) - self.zoom * j,
+                     self.zoom * (i - 0.5) + self.zoom * 0.5, 
                      self.zoom,
                      self.zoom)
-
-
 
 
 

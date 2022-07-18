@@ -10,7 +10,10 @@ from chess_board import ChessBoard
 from chess_state import ChessState, ChessPoint, ChessType
 
 from PyQt5.QtCore import QObject, QPoint, pyqtSignal
+from PyQt5.QtWidgets import QMessageBox
 from PyQt5 import QtCore
+
+from collections import deque
 
 class CheckerType:
     """ 国际跳棋种类
@@ -26,7 +29,7 @@ class ChessController(QObject):
     """ 信号
     """
     state_change_signal = pyqtSignal(ChessState)
-    game_end_signal = pyqtSignal(ChessType)
+    game_end_signal = pyqtSignal(int)
     start_thinking_signal = pyqtSignal()
     stop_thinking_signal = pyqtSignal()
     chess_list_change_signal = pyqtSignal(list)
@@ -62,6 +65,9 @@ class ChessController(QObject):
         # 鼠标点击次数标志
         self.click_flag = 0
 
+        self.checker_runing = deque()
+
+
     def start_game(self, rival_chess_color):
         """ 游戏开始
         """
@@ -71,17 +77,27 @@ class ChessController(QObject):
         else:
             self.my_chess_color = ChessType.BLACK
         self.first_state = ChessState(self.chess_size)
-        for i in range(0, self.chess_size):
-            for j in range(0, self.chess_row):
-                if i%2 == j%2:
-                    self.first_state.set_chess_type(i, j, ChessType.WHITE)
-            for j in range(self.chess_size - self.chess_row, self.chess_size):
-                if i%2 == j%2:
+        # for i in range(0, self.chess_size):
+        #     for j in range(0, self.chess_row):
+        #         if i%2 == j%2:
+        #             self.first_state.set_chess_type(i, j, ChessType.WHITE)
+        #     for j in range(self.chess_size - self.chess_row, self.chess_size):
+        #         if i%2 == j%2:
+        #             self.first_state.set_chess_type(i, j, ChessType.BLACK)
+        for i in range(0, self.chess_row):
+            for j in range(0, self.chess_size):
+                if i % 2 != j % 2:
                     self.first_state.set_chess_type(i, j, ChessType.BLACK)
+        for i in range(self.chess_size - self.chess_row, self.chess_size):
+            for j in range(0, self.chess_size):
+                if i % 2 != j % 2:
+                    self.first_state.set_chess_type(i, j, ChessType.WHITE)
         
+        print("first: ", self.first_state.chess_state)
         if self.curr_state is not None:
             self.curr_state = None
         self.curr_state = self.first_state.copy()
+        self.checker_runing.append(self.first_state.copy())
 
         # 旁路的方向
         self.ix[0] = -1     # 左下
@@ -197,12 +213,17 @@ class ChessController(QObject):
         """
         state.clear_chess_counts()
         moves_num = 0
-        for i in range(self.chess_size):
-            for j in range(self.chess_size):
+        # print("crood: ", state.chess_state)
+        # print("1111: ", state.chess_counts)
+        # print("state: ", state.at(0, 1))
+        for i in range(0, self.chess_size):
+            for j in range(0, self.chess_size):
                 # 如果是不能放棋子的点，直接跳过
-                if i % 2 != j % 2:
+                if i % 2 == j % 2:
                     continue
                 moves_num = self.moves_count(state, i, j)
+                # print("state: ", state.at(i, j))
+                # print("white: ", ChessType.WHITE)
                 if state.at(i, j) == ChessType.WHITE:
                     # 白色普通棋子个数
                     state.chess_counts[0] += 1
@@ -221,7 +242,7 @@ class ChessController(QObject):
                     # 黑色王棋的个数
                     state.chess_counts[5] += 1
                     state.chess_counts[6] += moves_num
-                    
+
     def check_terminate_pos(self, state:ChessState)->bool:
         """ 判断是否达到最终节点
         """                 
@@ -247,30 +268,37 @@ class ChessController(QObject):
 
         if self.check_terminate_pos(self.curr_state):
             self.gamerunning = False
-            self.game_end_signal.emit(self.who_win(self.curr_state))
+            win_chess_color = self.who_win(self.curr_state)[0]
+            self.game_end_signal.emit(win_chess_color)
 
     def change_state(self, state:ChessState):
         """ 棋子移动
         """
-        self.curr_state = state
+        self.curr_state = state.copy()
+        self.checker_runing.append(self.curr_state)
+        # for i in range(0, len(self.checker_runing)):
+        #     print(str(i) + ":::: ", self.checker_runing[i].chess_state)
         self.state_change_signal.emit(self.curr_state)
-        self.stop_thinking_signal()
+        # self.stop_thinking_signal()
 
         if self.check_terminate_pos(self.curr_state):
             self.gamerunning = False
-            self.game_end_signal.emit(self.who_win(self.curr_state))
+            win_chess_color = self.who_win(self.curr_state)[0]
+            # print("color: ", win_chess_color)
+            # print(self.curr_state.chess_counts)
+            self.game_end_signal.emit(win_chess_color)
 
-    def set_clicked_slot(self, i:int, j:int):
+    def set_clicked_slot(self, row:int, col:int):
         """ 鼠标点击事件
         """
-        print("recv: i:{}, j:{}".format(i, j))
-        if i >= 0 and i < self.chess_size and j >= 0 and j < self.chess_size \
-            and i % 2 == j % 2 and self.gamerunning:
+        print("recv: row:{}, col:{}".format(row, col))
+        if row >= 0 and row < self.chess_size and col >= 0 and col < self.chess_size \
+            and row % 2 != col % 2 and self.gamerunning:
             tmp_point = None
             if self.click_flag == 0:
-                tmp_point = self.first_click(i, j)
+                tmp_point = self.first_click(row, col)
             else :
-                self.second_click(i, j, tmp_point)
+                self.second_click(row, col, tmp_point)
         else:
             self.chess_list_del_signal.emit()
             self.click_flag = 0
@@ -288,6 +316,26 @@ class ChessController(QObject):
         if self.curr_state.is_empty(i, j) and  point is not None \
             and point.x != i and point.y != j:
             self.move(point, ChessPoint(i, j, ChessType.MOVEDTO))
+
+    def regret_chess_slot(self):
+        """ 悔棋槽函数
+        """
+        if len(self.checker_runing) == 1:
+            QMessageBox.warning(None, '警告', "已无法悔棋", QMessageBox.Yes | QMessageBox.No)
+            return
+        # print("333333333: ", len(self.checker_runing))
+        # print(self.curr_state.chess_state)
+        self.checker_runing.pop()
+        self.curr_state = self.checker_runing[-1]
+        # print("444444444: ", len(self.checker_runing))
+        # print(self.curr_state.chess_state)
+        self.state_change_signal.emit(self.curr_state)
+
+        if self.check_terminate_pos(self.curr_state):
+            self.gamerunning = False
+            self.game_end_signal.emit(self.who_win(self.curr_state)[0])
+
+
             
 
 
